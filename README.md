@@ -10,25 +10,56 @@ The project implements a Flask-based API to extract customer reviews from e-comm
 ---
 
 ## **Solution Approach**
-
-1. **Input**  
-   - A product page URL is passed as a query parameter to the API endpoint `/api/reviews`.
-
-2. **Dynamic CSS Selector Extraction**  
-   - The `fetch_css_selectors` function scrapes the page's HTML using BeautifulSoup to identify potential CSS selectors for elements related to reviews, authors, ratings, and pagination.
-
-3. **AI-Powered Selector Identification**  
-   - A hashmap of `<CSS Selectors, Text contained in them stripped to 10 tokens>` is generated and sent as a prompt to the Cohere API, which determines the best CSS selectors for the desired elements.
-
-4. **Review Scraping**  
-   - Selenium automates the browser to navigate through paginated pages, ensuring all reviews are fetched dynamically.
-   - BeautifulSoup is used to scrape review details from the HTML content of each page, offering reliable parsing independent of AI-generated prompts.
-
-5. **Output**  
-   - The extracted reviews are saved in a JSON file (`reviews.json`) with details such as review title, text, rating, and reviewer name.
-
 ---
-
+#### **1: API Input and Initialization**
+- **Start**: Represented as a start node.
+- **API Input**:
+  - A user sends a GET request to `/api/reviews?page=<URL>`.
+  - The URL of the product page is extracted from the query parameter.
+- **Validation**:
+  - Check if the URL is provided. If not, return an error response (`Missing 'page' query parameter`).
+#### **2: CSS Selector Extraction**
+- **Request Page HTML**:
+  - Use the `requests` library to fetch the HTML content of the page.
+- **Parse HTML**:
+  - Parse the content with BeautifulSoup.
+- **Extract Potential Selectors**:
+  - Identify potential CSS selectors for reviews, authors, ratings, etc., using regex patterns (`fetch_css_selectors()` function).
+- **Generate HashMap**:
+  - Create a hashmap `<CSS Selector, Text (first 10 tokens)>` from parsed content.
+#### **3: AI Tagging with Cohere API**
+- **Send Prompt to Cohere**:
+  - Send the hashmap of CSS selectors to the Cohere API.
+  - The API analyzes and identifies the most relevant selectors for:
+    - Review title
+    - Review text body
+    - Author name
+    - Rating
+    - Next pagination button
+- **Receive AI Response**:
+  - Receive the tagged selectors from the API (`get_tag_suggestions()` function).
+#### **4: Dynamic Review Scraping**
+- **Setup Selenium**:
+  - Initialize a Selenium WebDriver.
+  - Open the target URL in a browser.
+- **Handle Popups**:
+  - Dismiss any pop-ups or dialog boxes using the `handle_popups()` function.
+- **Extract Review Data**:
+  - Use BeautifulSoup and Selenium to locate and extract:
+    - Review title
+    - Review text body
+    - Author name
+    - Rating
+- **Handle Pagination**:
+  - Navigate through paginated pages by identifying and clicking the "Next Page" button dynamically with Selenium.
+#### **5: Save Reviews and Output**
+- **Compile Reviews**:
+  - Combine review data (title, text, author, rating) into a structured format.
+- **Save to JSON**:
+  - Save all the extracted reviews to a `reviews.json` file (`save_reviews_to_file()` function).
+- **End**:
+  - Stop the Selenium WebDriver and terminate the process.
+---
 ## **System Architecture**
 
 Below is the architecture workflow:
