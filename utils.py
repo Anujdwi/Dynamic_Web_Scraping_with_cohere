@@ -17,7 +17,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 import time
 import re
 
-api_key = 'tu74V8Dt0DFvjTeXeUB8lz9clLnmZ9hKrgidMuHV'
+api_key = 'COHERE_SECRET_KEY'
 
 def fetch_css_selectors(url):
     response = requests.get(url)
