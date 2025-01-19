@@ -1,11 +1,11 @@
 ---
 
-# **Product Review Scraper API**
+# **Product Review Scraper API using Cohere (LLM)**
 
 ---
 
 ## **Description**
-The project implements a Flask-based API to extract customer reviews from e-commerce product pages dynamically. It leverages browser automation (Selenium), web scraping (BeautifulSoup), and AI-based CSS selector identification (Cohere API) to extract key components like review title, text, author, rating, and pagination. The solution is designed to dynamically adapt to various website structures, providing flexibility for scraping multiple sites.
+The project implements a Flask-based API to extract customer reviews from e-commerce product pages dynamically. It leverages browser automation (Selenium) to handle pagination, web scraping (BeautifulSoup) for parsing HTML content regardless of prompts, and AI-based CSS selector identification (Cohere API) to extract key components like review title, text, author, rating, and pagination. The solution is designed to dynamically adapt to various website structures, providing flexibility for scraping multiple sites.
 
 ---
 
@@ -18,10 +18,11 @@ The project implements a Flask-based API to extract customer reviews from e-comm
    - The `fetch_css_selectors` function scrapes the page's HTML using BeautifulSoup to identify potential CSS selectors for elements related to reviews, authors, ratings, and pagination.
 
 3. **AI-Powered Selector Identification**  
-   - The `get_tag_suggestions` function leverages Cohere's natural language processing capabilities to determine the best CSS selectors for the desired elements.
+   - A hashmap of `<CSS Selectors, Text contained in them stripped to 10 tokens>` is generated and sent as a prompt to the Cohere API, which determines the best CSS selectors for the desired elements.
 
 4. **Review Scraping**  
-   - Selenium automates the browser to fetch all reviews across paginated pages by identifying and interacting with elements dynamically.
+   - Selenium automates the browser to navigate through paginated pages, ensuring all reviews are fetched dynamically.
+   - BeautifulSoup is used to scrape review details from the HTML content of each page, offering reliable parsing independent of AI-generated prompts.
 
 5. **Output**  
    - The extracted reviews are saved in a JSON file (`reviews.json`) with details such as review title, text, rating, and reviewer name.
@@ -34,9 +35,10 @@ Below is the architecture workflow:
 
 1. **Flask API**: Acts as the entry point for the system.  
 2. **CSS Selector Extraction**: Fetches potential CSS selectors for review-related elements.  
-3. **Cohere API Integration**: Processes and refines the CSS selectors for accurate identification.  
-4. **Selenium Automation**: Interacts with the website to scrape review details dynamically.  
-5. **JSON Storage**: Saves the extracted reviews locally for further analysis or use.  
+3. **Cohere API Integration**: Processes a hashmap of `<CSS Selectors, Text contained in them stripped to 10 tokens>` to refine and identify the best selectors.  
+4. **Selenium Automation**: Handles pagination to dynamically load additional reviews.  
+5. **BeautifulSoup Scraper**: Parses review content reliably, regardless of prompt-based selector accuracy.  
+6. **JSON Storage**: Saves the extracted reviews locally for further analysis or use.  
 
 ### **System Workflow Diagram**:
 ```
@@ -45,14 +47,20 @@ Below is the architecture workflow:
     +-------------------------+
               |
               v
-+--------------------------+  +-------------------------+
-| CSS Selector Extraction  |->|   Cohere AI Tagging    |
-+--------------------------+  +-------------------------+
++--------------------------+  +------------------------------------------------------+
+| CSS Selector Extraction  |->| Cohere AI Tagging (Processes hashmap of selectors &  |
+|                          |  | text content stripped to 10 tokens to identify tags) |
++--------------------------+  +------------------------------------------------------+
               |                           |
               v                           v
-     +-------------------+      +------------------+
-     | Selenium Scraper  | ---->| JSON File Output |
-     +-------------------+      +------------------+
++-------------------------+      +-------------------------+
+| BeautifulSoup Scraper   | ---->| Selenium for Pagination |
++-------------------------+      +-------------------------+
+              |                           |
+              v                           v
+       +-------------------+      +------------------+
+       | Reviews Extracted | ---->| JSON File Output |
+       +-------------------+      +------------------+
 ```
 
 ---
@@ -60,11 +68,11 @@ Below is the architecture workflow:
 ## **How to Run the Project**
 
 ### **1. Prerequisites**  
-- Python 3.8 or higher  
+- Python 3.11  
 - Google Chrome and Chromedriver  
 - Required Python libraries (install via `requirements.txt`):  
   ```bash
-  pip install flask requests beautifulsoup4 selenium cohere
+  pip install -v -r requirements.txt
   ```
 
 ### **2. Environment Setup**  
@@ -84,7 +92,7 @@ Below is the architecture workflow:
   ```
 - Example:  
   ```
-  http://127.0.0.1:5000/api/reviews?page=https://example.com/product-page
+  curl http://127.0.0.1:5000/api/reviews?page=https://example.com/product-page
   ```
 
 ### **5. Check Output**  
@@ -96,33 +104,27 @@ Below is the architecture workflow:
 
 ### **Request**:
 ```bash
-curl "http://127.0.0.1:5000/api/reviews?page=https://example.com/product-page"
+curl "http://127.0.0.1:5000/api/reviews?page=https://2717recovery.com/products/recovery-cream"
 ```
 
 ### **Response**:
 ```json
 {
-    "reviews_count": 2,
+    "reviews_count": 425,
     "reviews": [
         {
-            "title": "Amazing Product!",
-            "body": "This cream worked wonders for me.",
+            "title": "",
+            "body": "I love this stuff!",
             "rating": "5",
-            "reviewer": "John Doe"
+            "reviewer": "Shawna Churchill"
         },
         {
-            "title": "Not as Expected",
-            "body": "I was disappointed with the results.",
-            "rating": "2",
-            "reviewer": "Jane Smith"
+            "title": "",
+            "body": "It’s amazing",
+            "rating": "4",
+            "reviewer": "Tania Patterson"
         }
-    ]
+   ]
 }
 ```
-
----
-
-## **Diagrams**
-Refer to the **System Workflow Diagram** (above in ASCII) for better understanding.
-
 ---
